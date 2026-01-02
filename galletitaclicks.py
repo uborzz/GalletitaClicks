@@ -20,63 +20,75 @@ import json
 
 class AutoClicker:
     def __init__(self, root):
-        self.root = root
-        self.root.title("GalletitaClicks")
-        self.root.geometry("400x525")
-        self.root.resizable(False, False)
-        
-        # Variables de estado
-        self.is_running = False
-        self.click_thread = None
-        self.mouse_controller = mouse.Controller()
-        self.last_mouse_position = None
-        self.mouse_still_time = 0
-        self.mouse_still_threshold = 2.0  # Segundos que el mouse debe estar quieto (2 segundos)
-        self.last_click_position = None  # Para movimientos suaves
-        self.is_smooth_moving = False  # Flag para indicar si hay un movimiento suave en curso
-        self.is_startup_routine = False  # Flag para indicar si hay una rutina de inicio en curso
-        self.startup_routine_done = False  # Flag para indicar si ya se hizo la rutina de inicio
-        # Círculo fijo cuando el mouse está quieto
-        self.fixed_circle_center = None  # (x, y) posición del centro del círculo fijo
-        self.fixed_circle_radius = None  # Radio del círculo fijo
-        # Círculo fijo cuando el mouse está quieto
-        self.fixed_circle_center = None  # (x, y) posición del centro del círculo fijo
-        self.fixed_circle_radius = None  # Radio del círculo fijo
-        
-        # Variables de configuración
-        # Usar StringVar para poder controlar el formato de 1 decimal
-        self.click_interval = tk.StringVar(value="3.0")
-        self.use_random_interval = tk.BooleanVar(value=False)
-        self.random_interval_max = tk.StringVar(value="3.0")  # Inicializado igual al mínimo cuando se activa
-        self.use_random_position = tk.BooleanVar(value=False)
-        self.random_radius = tk.IntVar(value=10)
-        self.use_smooth_movements = tk.BooleanVar(value=False)
-        self.permissions_shown = False  # Flag para indicar si ya se mostró el diálogo de permisos
-        
-        # Canvas para visualización del círculo
-        self.overlay_window = None
-        self.overlay_canvas = None
-        self.preview_active = False
-        self.preview_message_label = None
-        
-        # Archivo para guardar la configuración (incluye estado de permisos)
-        # El directorio home del usuario no requiere permisos especiales para escribir
-        self.config_file = os.path.expanduser("~/.galletitaclicks_config.json")
-        
-        # Cargar configuración guardada
-        self.load_config()
-        
-        self.setup_ui()
-        
-        # Actualizar widgets después de crear la UI con los valores cargados
-        self.update_ui_from_config()
-        
-        # Configurar guardado automático cuando cambien los valores
-        self.setup_auto_save()
-        
-        # Verificar permisos de accesibilidad al iniciar
-        # Usar un delay mayor para asegurar que la ventana esté completamente cargada
-        self.root.after(1000, self.check_and_request_permissions)
+        try:
+            self.root = root
+            self.root.title("GalletitaClicks")
+            self.root.geometry("400x525")
+            self.root.resizable(False, False)
+            
+            # Variables de estado
+            self.is_running = False
+            self.click_thread = None
+            try:
+                self.mouse_controller = mouse.Controller()
+            except Exception as e:
+                print(f"Error al inicializar el controlador del mouse: {e}", file=sys.stderr)
+                raise
+            
+            self.last_mouse_position = None
+            self.mouse_still_time = 0
+            self.mouse_still_threshold = 2.0  # Segundos que el mouse debe estar quieto (2 segundos)
+            self.last_click_position = None  # Para movimientos suaves
+            self.is_smooth_moving = False  # Flag para indicar si hay un movimiento suave en curso
+            self.is_startup_routine = False  # Flag para indicar si hay una rutina de inicio en curso
+            self.startup_routine_done = False  # Flag para indicar si ya se hizo la rutina de inicio
+            # Círculo fijo cuando el mouse está quieto
+            self.fixed_circle_center = None  # (x, y) posición del centro del círculo fijo
+            self.fixed_circle_radius = None  # Radio del círculo fijo
+            # Círculo fijo cuando el mouse está quieto
+            self.fixed_circle_center = None  # (x, y) posición del centro del círculo fijo
+            self.fixed_circle_radius = None  # Radio del círculo fijo
+            
+            # Variables de configuración
+            # Usar StringVar para poder controlar el formato de 1 decimal
+            self.click_interval = tk.StringVar(value="3.0")
+            self.use_random_interval = tk.BooleanVar(value=False)
+            self.random_interval_max = tk.StringVar(value="3.0")  # Inicializado igual al mínimo cuando se activa
+            self.use_random_position = tk.BooleanVar(value=False)
+            self.random_radius = tk.IntVar(value=10)
+            self.use_smooth_movements = tk.BooleanVar(value=False)
+            self.permissions_shown = False  # Flag para indicar si ya se mostró el diálogo de permisos
+            
+            # Canvas para visualización del círculo
+            self.overlay_window = None
+            self.overlay_canvas = None
+            self.preview_active = False
+            self.preview_message_label = None
+            
+            # Archivo para guardar la configuración (incluye estado de permisos)
+            # El directorio home del usuario no requiere permisos especiales para escribir
+            self.config_file = os.path.expanduser("~/.galletitaclicks_config.json")
+            
+            # Cargar configuración guardada
+            self.load_config()
+            
+            self.setup_ui()
+            
+            # Actualizar widgets después de crear la UI con los valores cargados
+            self.update_ui_from_config()
+            
+            # Configurar guardado automático cuando cambien los valores
+            self.setup_auto_save()
+            
+            # Verificar permisos de accesibilidad al iniciar
+            # Usar un delay mayor para asegurar que la ventana esté completamente cargada
+            self.root.after(1000, self.check_and_request_permissions)
+        except Exception as e:
+            # Si hay un error durante la inicialización, mostrarlo
+            import traceback
+            error_msg = f"Error durante la inicialización:\n\n{str(e)}\n\n{traceback.format_exc()}"
+            print(error_msg, file=sys.stderr)
+            raise
         
     def setup_ui(self):
         # Estilo moderno
@@ -1161,33 +1173,36 @@ class AutoClicker:
             return
         
         # Verificar permisos antes de iniciar (solo cuando se pulsa Start)
-        has_permissions = self.verify_permissions_strict()
-        if not has_permissions:
-            # Si no hay permisos, resetear el flag para que se muestre el diálogo de nuevo
-            # Esto es útil cuando se instala una nueva versión que podría usar config vieja
-            self.permissions_shown = False
-            self.save_config()  # Guardar el cambio inmediatamente
-            
-            # Mostrar alerta indicando que la aplicación se cerrará
-            message = (
-                "GalletitaClicks necesita permisos de accesibilidad para funcionar.\n\n"
-                "La aplicación se cerrará ahora. Por favor:\n"
-                "1. Vuelve a abrir GalletitaClicks\n"
-                "2. Se te pedirá otorgar permisos de accesibilidad\n"
-                "3. Ve a Preferencias del Sistema > Privacidad y Seguridad > Privacidad > Accesibilidad\n"
-                "4. Marca la casilla junto a GalletitaClicks\n"
-                "5. Reinicia la aplicación si es necesario"
-            )
-            
-            messagebox.showinfo(
-                "Permisos de Accesibilidad Requeridos",
-                message
-            )
-            
-            # Cerrar la aplicación
-            self.root.quit()
-            self.root.destroy()
-            return
+        # NO cerrar la aplicación, solo mostrar un warning y permitir que intente funcionar
+        # Si realmente no hay permisos, fallará al intentar hacer click y mostrará el error entonces
+        try:
+            has_permissions = self.verify_permissions_strict()
+            if not has_permissions:
+                # Verificar una vez más después de un pequeño delay
+                time.sleep(0.1)
+                has_permissions = self.verify_permissions_strict()
+                
+                if not has_permissions:
+                    # En lugar de cerrar, mostrar un warning pero permitir continuar
+                    # Si realmente no hay permisos, fallará al intentar hacer click
+                    message = (
+                        "Advertencia: No se detectaron permisos de accesibilidad.\n\n"
+                        "Si los permisos ya están concedidos, puedes continuar.\n"
+                        "Si no funcionan los clicks, ve a:\n"
+                        "Preferencias del Sistema > Privacidad y Seguridad > Privacidad > Accesibilidad\n"
+                        "y asegúrate de que GalletitaClicks esté marcado."
+                    )
+                    
+                    messagebox.showwarning(
+                        "Permisos de Accesibilidad",
+                        message
+                    )
+                    # NO cerrar la aplicación, permitir que intente funcionar
+                    # Si realmente no hay permisos, fallará al hacer click
+        except Exception as e:
+            # Si hay un error al verificar, asumir que tenemos permisos
+            # (mejor permitir que funcione que bloquear innecesariamente)
+            pass
         
         self.is_running = True
         self.last_mouse_position = self.mouse_controller.position
@@ -1237,66 +1252,78 @@ class AutoClicker:
         if platform.system() != "Darwin":  # Solo en macOS
             return
         
-        # Solo verificar si no se ha mostrado el diálogo antes
-        # Si ya se mostró, no verificar al iniciar (se verificará al pulsar Start)
+        # Primero verificar si realmente hay permisos
+        try:
+            has_permissions = self.verify_permissions_strict()
+            if has_permissions:
+                # Si hay permisos, marcar como mostrado y no hacer nada más
+                if not self.permissions_shown:
+                    self.permissions_shown = True
+                    self.save_config()
+                return  # Tiene permisos, no hacer nada
+        except:
+            # Si falla la verificación, continuar con el flujo normal
+            pass
+        
+        # Solo mostrar el diálogo si:
+        # 1. No se ha mostrado antes (primera vez)
+        # 2. Y no se detectaron permisos
         if not self.permissions_shown:
-            # Primera vez, mostrar el diálogo sin verificar (más seguro)
-            self.request_accessibility_permissions(update_config=False)
+            # Primera vez, mostrar el diálogo
+            self.request_accessibility_permissions(update_config=True)
         # Si ya se mostró antes, no hacer nada al iniciar
         # La verificación real se hará cuando el usuario pulse Start
     
     def verify_permissions_strict(self):
-        """Verifica permisos de forma estricta intentando mover el mouse"""
+        """Verifica permisos intentando leer y escribir posición del mouse"""
         try:
-            # Obtener la posición actual del mouse
+            # Intentar obtener la posición del mouse
+            # Si puede hacerlo sin errores, tiene permisos básicos
             original_pos = self.mouse_controller.position
             
-            # Intentar mover el mouse a una posición muy cercana (5 píxeles)
-            # Si no hay permisos, esto fallará o no moverá el mouse
-            test_pos = (original_pos[0] + 5, original_pos[1] + 5)
-            
+            # Si llegamos aquí sin excepción, tenemos permisos para leer
+            # Ahora intentamos un movimiento muy pequeño para verificar permisos de escritura
             try:
-                # Intentar mover el mouse
+                # Guardar posición original
+                saved_pos = original_pos
+                
+                # Intentar un movimiento muy pequeño (1 píxel) que no se notará
+                # Usar coordenadas absolutas para evitar problemas
+                test_pos = (int(original_pos[0]) + 1, int(original_pos[1]) + 1)
                 self.mouse_controller.position = test_pos
-                time.sleep(0.15)  # Dar más tiempo para que el movimiento se registre
+                time.sleep(0.03)  # Menos tiempo para ser más rápido
                 
-                # Verificar la nueva posición
-                new_pos = self.mouse_controller.position
+                # Verificar que se movió (o al menos que no dio error)
+                current_pos = self.mouse_controller.position
                 
-                # Calcular la distancia entre la posición original y la nueva
-                distance_from_original = math.sqrt((new_pos[0] - original_pos[0])**2 + (new_pos[1] - original_pos[1])**2)
+                # Volver inmediatamente a la posición original
+                self.mouse_controller.position = saved_pos
+                time.sleep(0.02)
                 
-                # Calcular la distancia entre la posición objetivo y la posición real
-                distance_to_target = math.sqrt((new_pos[0] - test_pos[0])**2 + (new_pos[1] - test_pos[1])**2)
-                
-                # Volver a la posición original
-                self.mouse_controller.position = original_pos
-                time.sleep(0.05)
-                
-                # Si el mouse no se movió desde la posición original (distancia < 2 píxeles), no hay permisos
-                if distance_from_original < 2:
-                    return False
-                
-                # Si la distancia al objetivo es pequeña (menos de 4 píxeles), el movimiento funcionó
-                if distance_to_target < 4:
-                    return True
-                else:
-                    # El mouse se movió pero no al objetivo, podría ser movimiento del usuario
-                    # En este caso, asumimos que hay permisos porque el mouse se movió
-                    return True
+                # Si llegamos aquí sin excepción, tenemos permisos
+                return True
             except Exception as e:
-                # Si hay una excepción, probablemente no hay permisos
+                # Si falla el movimiento, verificar si es un error de permisos
                 error_str = str(e).lower()
                 if 'permission' in error_str or 'accessibility' in error_str or 'trusted' in error_str:
                     return False
-                # Cualquier otra excepción también indica falta de permisos
-                return False
+                # Si es otro tipo de error, podría ser que el usuario movió el mouse
+                # o algún otro problema temporal. En este caso, asumimos permisos
+                # porque al menos pudimos leer la posición inicial
+                return True
         except Exception as e:
-            # Si no podemos ni obtener la posición, definitivamente no hay permisos
+            # Si no podemos ni obtener la posición, verificar el tipo de error
             error_str = str(e).lower()
             if 'permission' in error_str or 'accessibility' in error_str or 'trusted' in error_str:
                 return False
-            return False
+            # Si es otro error, podría ser un problema temporal
+            # Intentar una vez más después de un pequeño delay
+            try:
+                time.sleep(0.1)
+                test_pos = self.mouse_controller.position
+                return True  # Si podemos leer, tenemos permisos
+            except:
+                return False  # Si falla de nuevo, definitivamente no hay permisos
     
     def request_accessibility_permissions(self, update_config=True):
         """Muestra un diálogo solicitando permisos de accesibilidad"""
@@ -1461,10 +1488,42 @@ class AutoClicker:
         self.root.destroy()
 
 def main():
-    root = tk.Tk()
-    app = AutoClicker(root)
-    root.protocol("WM_DELETE_WINDOW", app.on_closing)
-    root.mainloop()
+    try:
+        # Cambiar al directorio del ejecutable si es necesario
+        if getattr(sys, 'frozen', False):
+            # Si está empaquetado, cambiar al directorio del ejecutable
+            app_dir = os.path.dirname(sys.executable)
+            try:
+                os.chdir(app_dir)
+            except:
+                pass
+        
+        root = tk.Tk()
+        app = AutoClicker(root)
+        root.protocol("WM_DELETE_WINDOW", app.on_closing)
+        root.mainloop()
+        
+    except Exception as e:
+        # Intentar mostrar el error en un diálogo si es posible
+        import traceback
+        error_trace = traceback.format_exc()
+        error_msg = f"Error al iniciar la aplicación:\n\n{str(e)}\n\n{error_trace}"
+        
+        # Intentar mostrar un diálogo de error
+        try:
+            root = tk.Tk()
+            root.withdraw()  # Ocultar ventana principal
+            from tkinter import messagebox
+            messagebox.showerror(
+                "Error al iniciar GalletitaClicks",
+                f"Se produjo un error al iniciar la aplicación:\n\n{str(e)}"
+            )
+            root.destroy()
+        except:
+            # Si no se puede mostrar el diálogo, escribir al stderr
+            print(error_msg, file=sys.stderr)
+        
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

@@ -51,36 +51,15 @@ if [ -d "dist/GalletitaClicks.app" ]; then
     echo ""
     echo "Firmando la aplicación y todos sus componentes..."
     
-    # Eliminar atributos de cuarentena y atributos extendidos
+    # Limpiar atributos de cuarentena
     echo "Limpiando atributos de cuarentena..."
     xattr -cr dist/GalletitaClicks.app 2>/dev/null || true
     
-    # Asegurar permisos de ejecución
-    echo "Ajustando permisos de ejecución..."
-    find dist/GalletitaClicks.app -type f -perm +111 -exec chmod 755 {} \; 2>/dev/null || true
-    chmod 755 dist/GalletitaClicks.app/Contents/MacOS/GalletitaClicks 2>/dev/null || true
-    
-    # Eliminar firmas anteriores si existen
-    codesign --remove-signature dist/GalletitaClicks.app 2>/dev/null || true
-    
-    # Primero firmar todos los binarios dentro del .app (en orden correcto)
-    find dist/GalletitaClicks.app/Contents -type f \( -name "*.so" -o -name "*.dylib" -o -perm +111 \) -exec codesign --force --sign - --timestamp=none {} \; 2>/dev/null || true
-    
-    # Luego firmar el bundle completo con opciones runtime
-    codesign --force --deep --sign - --timestamp=none --options runtime dist/GalletitaClicks.app 2>/dev/null || {
+    # Firmar la aplicación de forma simple (como antes)
+    echo "Firmando la aplicación..."
+    codesign --force --deep --sign - dist/GalletitaClicks.app 2>/dev/null || {
         echo "Advertencia: No se pudo firmar la aplicación completamente."
     }
-    
-    # Verificar la firma
-    codesign --verify --verbose=1 dist/GalletitaClicks.app 2>/dev/null && echo "✓ Aplicación firmada y verificada" || echo "⚠ Firma no verificada (normal sin certificado de desarrollador)"
-    
-    # Verificar que no hay atributos de cuarentena
-    if xattr -l dist/GalletitaClicks.app 2>/dev/null | grep -q "com.apple.quarantine"; then
-        echo "Advertencia: Se detectaron atributos de cuarentena, eliminándolos..."
-        xattr -rd com.apple.quarantine dist/GalletitaClicks.app 2>/dev/null || true
-    else
-        echo "✓ Sin atributos de cuarentena"
-    fi
 fi
 
 echo ""

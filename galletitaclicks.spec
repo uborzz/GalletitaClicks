@@ -74,6 +74,8 @@ app = BUNDLE(
         'CFBundleExecutable': 'GalletitaClicks',
         'LSApplicationCategoryType': 'public.app-category.utilities',
         'NSHumanReadableCopyright': 'Copyright © 2024',
+        'NSAppleEventsUsageDescription': 'GalletitaClicks necesita controlar el mouse para realizar clicks automáticos.',
+        'NSSystemAdministrationUsageDescription': 'GalletitaClicks necesita permisos de accesibilidad para controlar el mouse.',
     },
 )
 
