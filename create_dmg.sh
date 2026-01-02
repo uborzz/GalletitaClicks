@@ -297,12 +297,6 @@ echo "Comprimiendo DMG..."
 rm -f "GalletitaClicks.dmg"
 hdiutil convert "$DMG_TEMP_FILE" -format UDZO -o "GalletitaClicks.dmg"
 
-# Intentar "engrapar" la firma al DMG (puede ayudar con Gatekeeper)
-echo "Aplicando firma al DMG..."
-codesign --sign - "GalletitaClicks.dmg" 2>/dev/null || {
-    echo "Advertencia: No se pudo firmar el DMG (normal sin certificado)"
-}
-
 # El icono y el fondo ya se aplicaron antes de comprimir, así que deberían estar en el DMG final
 # No intentar aplicar el icono después de comprimir porque el DMG comprimido es solo lectura
 echo "✓ Icono y fondo aplicados antes de comprimir el DMG"
