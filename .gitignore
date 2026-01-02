@@ -11,13 +11,16 @@ ENV/
 # Build
 build/
 dist/
-*.spec
 *.app
 *.dmg
-*.icns
 icon.iconset/
 dmg_temp/
 GalletitaClicks_temp.dmg
+
+# Específicos de build (permitir los archivos fuente)
+# galletitaclicks.spec - SÍ subir (necesario para construir)
+# icon.png - SÍ subir (icono fuente)
+# icon.icns - SÍ subir (icono compilado, útil aunque se puede generar)
 
 # Configuración local
 .galletitaclicks_config.json
