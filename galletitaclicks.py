@@ -22,7 +22,7 @@ class AutoClicker:
     def __init__(self, root):
         self.root = root
         self.root.title("GalletitaClicks")
-        self.root.geometry("400x500")
+        self.root.geometry("400x525")
         self.root.resizable(False, False)
         
         # Variables de estado
@@ -45,9 +45,9 @@ class AutoClicker:
         
         # Variables de configuración
         # Usar StringVar para poder controlar el formato de 1 decimal
-        self.click_interval = tk.StringVar(value="1.0")
+        self.click_interval = tk.StringVar(value="3.0")
         self.use_random_interval = tk.BooleanVar(value=False)
-        self.random_interval_max = tk.StringVar(value="3.0")  # Inicializado a 3.0 (1.0 + 2.0)
+        self.random_interval_max = tk.StringVar(value="3.0")  # Inicializado igual al mínimo cuando se activa
         self.use_random_position = tk.BooleanVar(value=False)
         self.random_radius = tk.IntVar(value=10)
         self.use_smooth_movements = tk.BooleanVar(value=False)
@@ -83,13 +83,111 @@ class AutoClicker:
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Frame principal
+        # Configurar fondo lila claro para todos los elementos
+        pink_bg = "#F0E5FF"  # Lila pastel
+        style.configure("TFrame", background=pink_bg)
+        style.configure("TLabel", background=pink_bg)
+        style.configure("TCheckbutton", background=pink_bg)
+        
+        # Intentar cargar el icono de la aplicación
+        icon_image = None
+        icon_path_found = None
+        icon_64_path = None  # Para el icono de 64x64 del .icns
+        
+        try:
+            # Primero intentar extraer 64x64 del .icns (mejor calidad)
+            icns_paths = [
+                'icon.icns',
+                os.path.join(os.path.dirname(__file__), 'icon.icns'),
+                os.path.join(os.path.dirname(sys.executable), 'icon.icns'),
+            ]
+            
+            for icns_path in icns_paths:
+                if os.path.exists(icns_path):
+                    try:
+                        # Extraer el tamaño 64x64 del .icns usando sips
+                        import tempfile
+                        temp_dir = tempfile.mkdtemp()
+                        icon_64_path = os.path.join(temp_dir, 'icon_64.png')
+                        # Extraer icon_32x32@2x.png que es 64x64
+                        result = subprocess.run(
+                            ['iconutil', '--convert', 'iconset', '--output', os.path.join(temp_dir, 'temp.iconset'), icns_path],
+                            capture_output=True,
+                            timeout=5
+                        )
+                        if result.returncode == 0:
+                            # Buscar el archivo de 64x64 (icon_32x32@2x.png)
+                            icon_64_file = os.path.join(temp_dir, 'temp.iconset', 'icon_32x32@2x.png')
+                            if os.path.exists(icon_64_file):
+                                icon_64_path = icon_64_file
+                                break
+                    except:
+                        continue
+            
+            # Buscar el icono PNG como alternativa
+            icon_paths = [
+                'icon.png',
+                os.path.join(os.path.dirname(__file__), 'icon.png'),
+                os.path.join(os.path.dirname(sys.executable), 'icon.png'),
+            ]
+            
+            for icon_path in icon_paths:
+                if os.path.exists(icon_path):
+                    try:
+                        # Para PNG
+                        icon_image = tk.PhotoImage(file=icon_path)
+                        # Redimensionar a un tamaño pequeño para el icono de ventana (24x24)
+                        small_icon = icon_image.subsample(max(1, icon_image.width() // 24))
+                        self.root.iconphoto(True, small_icon)
+                        if not icon_path_found:
+                            icon_path_found = icon_path
+                        break
+                    except:
+                        continue
+        except:
+            pass  # Si no se puede cargar el icono, continuar sin él
+        
+        # Frame principal con fondo rosa claro
         main_frame = ttk.Frame(self.root, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Título
-        title_label = ttk.Label(main_frame, text="GalletitaClicks", font=("Arial", 18, "bold"))
-        title_label.pack(pady=(0, 20))
+        # Configurar fondo lila claro para la ventana principal
+        self.root.configure(bg="#F0E5FF")  # Lila pastel
+        main_frame.configure(style="Main.TFrame")
+        style.configure("Main.TFrame", background="#F0E5FF")
+        
+        # Canvas para el icono de fondo en la esquina superior derecha (con margen)
+        # Usar el icono de 64x64 del .icns directamente sin redimensionar
+        if icon_64_path and os.path.exists(icon_64_path):
+            try:
+                # Cargar el icono de 64x64 directamente (sin redimensionar)
+                bg_icon_image = tk.PhotoImage(file=icon_64_path)
+                icon_size = bg_icon_image.width()  # Debería ser 64
+                
+                # Crear un canvas para el icono de fondo con el tamaño real del icono
+                icon_canvas = tk.Canvas(
+                    self.root,
+                    width=icon_size,
+                    height=icon_size,
+                    bg="#F0E5FF",
+                    highlightthickness=0
+                )
+                # Posición: 15 píxeles desde arriba y 15 píxeles desde la derecha
+                # x = ancho_ventana (400) - tamaño_icono - margen_derecho (15)
+                icon_canvas.place(x=400 - icon_size - 35, y=15)
+                
+                icon_canvas.create_image(icon_size // 2, icon_size // 2, image=bg_icon_image, anchor=tk.CENTER)
+                # Guardar referencia para evitar que se elimine
+                icon_canvas.bg_icon_image = bg_icon_image
+            except Exception as e:
+                pass  # Si falla, continuar sin el icono de fondo
+        
+        # Título (sin icono, solo texto)
+        title_frame = ttk.Frame(main_frame)
+        title_frame.pack(pady=(0, 20))
+        
+        title_label = ttk.Label(title_frame, text="GalletitaClicks", font=("Arial", 18, "bold"))
+        title_label.pack(side=tk.LEFT)
         
         # Tiempo entre clicks
         interval_frame = ttk.Frame(main_frame)
@@ -320,13 +418,13 @@ class AutoClicker:
         )
         self.radius_scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
         
-        # Checkbox para movimientos sexy con botón Preview al lado
+        # Checkbox para movimiento sexy con botón Preview al lado
         smooth_movements_frame = ttk.Frame(self.radius_frame)
         smooth_movements_frame.pack(fill=tk.X, pady=5)
         
         smooth_movements_check = ttk.Checkbutton(
             smooth_movements_frame,
-            text="Movimientos sexy",
+            text="Movimiento sexy",
             variable=self.use_smooth_movements
         )
         smooth_movements_check.pack(side=tk.LEFT, anchor=tk.W)
@@ -338,7 +436,7 @@ class AutoClicker:
             style="Preview.TButton",
             width=12  # Mismo ancho que Start/Stop
         )
-        self.preview_button.pack(side=tk.LEFT, padx=(15, 0))
+        self.preview_button.pack(side=tk.RIGHT, padx=(0, 0))
         
         # Mensaje de preview
         self.preview_message_label = ttk.Label(
@@ -403,14 +501,14 @@ class AutoClicker:
         )
         self.toggle_button.pack(side=tk.LEFT, padx=(0, 15))
         
-        # Estado - a la derecha del botón, con fuente mayor (mismo tamaño activo/inactivo)
+        # Estado - a la derecha del botón, alineado a la derecha, con fuente mayor
         self.status_label = ttk.Label(
             button_frame, 
             text="Estado: Detenido", 
             foreground="gray",
-            font=("Arial", 16, "normal")
+            font=("Arial", 18, "normal")
         )
-        self.status_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.status_label.pack(side=tk.RIGHT, padx=(0, 0))
         
         # Info
         info_label = ttk.Label(
@@ -420,6 +518,15 @@ class AutoClicker:
             foreground="gray"
         )
         info_label.pack(pady=5)
+        
+        # Footer (siempre al final)
+        footer_label = ttk.Label(
+            main_frame,
+            text="Made with ❤️ by uborZz for MHS",
+            font=("Arial", 12),
+            foreground="gray"
+        )
+        footer_label.pack(side=tk.BOTTOM, pady=(10, 5), anchor=tk.CENTER)
         
     def toggle_random_interval(self):
         if self.use_random_interval.get():
