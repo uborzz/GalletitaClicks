@@ -19,19 +19,23 @@ Auto-clicker para macOS con interfaz gráfica intuitiva.
 
 ### Si aparece un mensaje de seguridad al abrir:
 
-**Primera vez (solo una vez):** 
-- Haz clic derecho (o Control+clic) en `GalletitaClicks.app` en Applications
-- Selecciona **"Abrir"**
-- macOS te preguntará si estás seguro, haz clic en **"Abrir"**
+**Opción 1 (Más fácil):** 
+1. Arrastra `GalletitaClicks.app` a Applications
+2. En el DMG, ejecuta el script **"ABRIR_PRIMERA_VEZ.command"** (doble clic)
+3. El script eliminará la cuarentena y abrirá la aplicación automáticamente
 
-**Después de esto:** Ya podrás abrir la aplicación normalmente con **doble clic** como cualquier otra app. macOS la recordará como segura.
+**Opción 2 (Manual):**
+1. Haz clic derecho (o Control+clic) en `GalletitaClicks.app` en Applications
+2. Selecciona **"Abrir"**
+3. macOS te preguntará si estás seguro, haz clic en **"Abrir"**
 
-**Alternativa (si prefieres usar Terminal):**
+**Opción 3 (Terminal):**
 ```bash
-xattr -d com.apple.quarantine /Applications/GalletitaClicks.app
+xattr -cr /Applications/GalletitaClicks.app
+open /Applications/GalletitaClicks.app
 ```
 
-Después de cualquiera de estas opciones, la aplicación funcionará normalmente con doble clic.
+**Después de cualquiera de estas opciones:** Ya podrás abrir la aplicación normalmente con **doble clic** como cualquier otra app. macOS la recordará como segura.
 
 ## Permisos requeridos
 

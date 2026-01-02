@@ -49,12 +49,18 @@ pyinstaller galletitaclicks.spec
 # Firmar la aplicación con identidad ad-hoc (evita algunos problemas de Gatekeeper)
 if [ -d "dist/GalletitaClicks.app" ]; then
     echo ""
-    echo "Firmando la aplicación..."
-    codesign --force --deep --sign - dist/GalletitaClicks.app 2>/dev/null || {
-        echo "Advertencia: No se pudo firmar la aplicación. Esto es normal si no tienes un certificado de desarrollador."
-        echo "La aplicación funcionará, pero macOS puede mostrar una advertencia la primera vez."
+    echo "Firmando la aplicación y todos sus componentes..."
+    
+    # Primero firmar todos los binarios dentro del .app
+    find dist/GalletitaClicks.app -type f -perm +111 -exec codesign --force --sign - {} \; 2>/dev/null || true
+    
+    # Luego firmar el bundle completo
+    codesign --force --deep --sign - --options runtime dist/GalletitaClicks.app 2>/dev/null || {
+        echo "Advertencia: No se pudo firmar la aplicación completamente."
     }
-    echo "✓ Aplicación firmada"
+    
+    # Verificar la firma
+    codesign --verify --verbose dist/GalletitaClicks.app 2>/dev/null && echo "✓ Aplicación firmada y verificada" || echo "⚠ Firma no verificada (normal sin certificado de desarrollador)"
 fi
 
 echo ""

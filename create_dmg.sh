@@ -24,10 +24,46 @@ mkdir -p "$DMG_TEMP"
 # Copiar la aplicación al directorio temporal
 cp -R "dist/GalletitaClicks.app" "$DMG_TEMP/"
 
-# Firmar la aplicación antes de crear el DMG (ad-hoc signing)
-echo "Firmando la aplicación..."
-codesign --force --deep --sign - "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null || {
-    echo "Advertencia: No se pudo firmar la aplicación. Continuando sin firma..."
+# Copiar el script de ayuda para abrir la primera vez
+if [ -f "ABRIR_PRIMERA_VEZ.command" ]; then
+    cp "ABRIR_PRIMERA_VEZ.command" "$DMG_TEMP/"
+    chmod +x "$DMG_TEMP/ABRIR_PRIMERA_VEZ.command"
+fi
+
+# Crear archivo de instrucciones
+cat > "$DMG_TEMP/INSTRUCCIONES.txt" << 'EOF'
+═══════════════════════════════════════════════════════
+  GALLETITACLICKS - INSTRUCCIONES DE INSTALACIÓN
+═══════════════════════════════════════════════════════
+
+1. Arrastra "GalletitaClicks.app" a la carpeta Applications
+
+2. Para abrir la aplicación la primera vez:
+   
+   OPCIÓN A (Recomendada):
+   → Haz doble clic en "ABRIR_PRIMERA_VEZ.command"
+   → El script abrirá la aplicación automáticamente
+   
+   OPCIÓN B (Manual):
+   → Haz clic derecho en GalletitaClicks.app en Applications
+   → Selecciona "Abrir"
+   → Confirma en el diálogo de seguridad
+
+3. ¡Listo! A partir de ahora podrás abrir la aplicación
+   normalmente con doble clic.
+
+═══════════════════════════════════════════════════════
+Si tienes problemas, consulta el README en GitHub.
+═══════════════════════════════════════════════════════
+EOF
+
+# Firmar la aplicación antes de crear el DMG (ad-hoc signing mejorado)
+echo "Firmando la aplicación para el DMG..."
+# Firmar todos los binarios primero
+find "$DMG_TEMP/GalletitaClicks.app" -type f -perm +111 -exec codesign --force --sign - {} \; 2>/dev/null || true
+# Firmar el bundle completo
+codesign --force --deep --sign - --options runtime "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null || {
+    echo "Advertencia: No se pudo firmar la aplicación completamente. Continuando..."
 }
 
 # Crear un enlace simbólico a Applications
@@ -206,8 +242,14 @@ echo "Configurando vista del Finder..."
             delay 1
             
             -- Posicionar los iconos (más separados para la flecha entre ellos)
-            set position of item "GalletitaClicks.app" of container window to {120, 140}
-            set position of item "Applications" of container window to {420, 140}
+            set position of item "GalletitaClicks.app" of container window to {120, 100}
+            set position of item "Applications" of container window to {420, 100}
+            if exists item "ABRIR_PRIMERA_VEZ.command" of container window then
+                set position of item "ABRIR_PRIMERA_VEZ.command" of container window to {120, 255}
+            end if
+            if exists item "INSTRUCCIONES.txt" of container window then
+                set position of item "INSTRUCCIONES.txt" of container window to {420, 255}
+            end if
             
             -- Actualizar y guardar la vista
             close
@@ -254,6 +296,12 @@ sleep 2
 echo "Comprimiendo DMG..."
 rm -f "GalletitaClicks.dmg"
 hdiutil convert "$DMG_TEMP_FILE" -format UDZO -o "GalletitaClicks.dmg"
+
+# Intentar "engrapar" la firma al DMG (puede ayudar con Gatekeeper)
+echo "Aplicando firma al DMG..."
+codesign --sign - "GalletitaClicks.dmg" 2>/dev/null || {
+    echo "Advertencia: No se pudo firmar el DMG (normal sin certificado)"
+}
 
 # El icono y el fondo ya se aplicaron antes de comprimir, así que deberían estar en el DMG final
 # No intentar aplicar el icono después de comprimir porque el DMG comprimido es solo lectura
