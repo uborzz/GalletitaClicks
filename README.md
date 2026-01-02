@@ -13,7 +13,7 @@ Auto-clicker para macOS con interfaz gráfica intuitiva.
 
 ## Instalación
 
-1. Descarga el archivo `GalletitaClicks.dmg` desde la sección [Releases](https://github.com/TU_USUARIO/galletitaclicks/releases)
+1. Descarga el archivo `GalletitaClicks.dmg` desde la sección [Releases](https://github.com/uborzz/galletitaclicks/releases)
 2. Abre el archivo `.dmg` descargado
 3. Arrastra `GalletitaClicks.app` a la carpeta Applications
 4. Abre la aplicación desde Applications
