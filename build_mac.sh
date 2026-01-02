@@ -46,6 +46,17 @@ fi
 echo "Usando archivo galletitaclicks.spec..."
 pyinstaller galletitaclicks.spec
 
+# Firmar la aplicación con identidad ad-hoc (evita algunos problemas de Gatekeeper)
+if [ -d "dist/GalletitaClicks.app" ]; then
+    echo ""
+    echo "Firmando la aplicación..."
+    codesign --force --deep --sign - dist/GalletitaClicks.app 2>/dev/null || {
+        echo "Advertencia: No se pudo firmar la aplicación. Esto es normal si no tienes un certificado de desarrollador."
+        echo "La aplicación funcionará, pero macOS puede mostrar una advertencia la primera vez."
+    }
+    echo "✓ Aplicación firmada"
+fi
+
 echo ""
 echo "¡Build completado! El ejecutable está en la carpeta 'dist/GalletitaClicks.app'"
 echo ""

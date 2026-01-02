@@ -16,7 +16,22 @@ Auto-clicker para macOS con interfaz gráfica intuitiva.
 1. Descarga el archivo `GalletitaClicks.dmg` desde la sección [Releases](https://github.com/uborzz/galletitaclicks/releases)
 2. Abre el archivo `.dmg` descargado
 3. Arrastra `GalletitaClicks.app` a la carpeta Applications
-4. Abre la aplicación desde Applications
+
+### Si aparece un mensaje de seguridad al abrir:
+
+**Primera vez (solo una vez):** 
+- Haz clic derecho (o Control+clic) en `GalletitaClicks.app` en Applications
+- Selecciona **"Abrir"**
+- macOS te preguntará si estás seguro, haz clic en **"Abrir"**
+
+**Después de esto:** Ya podrás abrir la aplicación normalmente con **doble clic** como cualquier otra app. macOS la recordará como segura.
+
+**Alternativa (si prefieres usar Terminal):**
+```bash
+xattr -d com.apple.quarantine /Applications/GalletitaClicks.app
+```
+
+Después de cualquiera de estas opciones, la aplicación funcionará normalmente con doble clic.
 
 ## Permisos requeridos
 
