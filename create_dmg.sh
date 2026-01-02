@@ -30,12 +30,6 @@ codesign --force --deep --sign - "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null || 
     echo "Advertencia: No se pudo firmar la aplicación. Continuando sin firma..."
 }
 
-# Copiar el script de instalación si existe
-if [ -f "install.sh" ]; then
-    cp "install.sh" "$DMG_TEMP/"
-    chmod +x "$DMG_TEMP/install.sh"
-fi
-
 # Crear un enlace simbólico a Applications
 ln -s /Applications "$DMG_TEMP/Applications"
 
@@ -214,9 +208,6 @@ echo "Configurando vista del Finder..."
             -- Posicionar los iconos (más separados para la flecha entre ellos)
             set position of item "GalletitaClicks.app" of container window to {120, 140}
             set position of item "Applications" of container window to {420, 140}
-            if exists item "install.sh" of container window then
-                set position of item "install.sh" of container window to {120, 280}
-            end if
             
             -- Actualizar y guardar la vista
             close
