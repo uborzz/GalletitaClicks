@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Build
+build/
+dist/
+*.spec
+*.app
+*.dmg
+*.icns
+icon.iconset/
+dmg_temp/
+GalletitaClicks_temp.dmg
+
+# Configuración local
+.galletitaclicks_config.json
+.autoclicker_permissions_shown
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
