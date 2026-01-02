@@ -24,12 +24,6 @@ mkdir -p "$DMG_TEMP"
 # Copiar la aplicación al directorio temporal
 cp -R "dist/GalletitaClicks.app" "$DMG_TEMP/"
 
-# Copiar el script de ayuda para abrir la primera vez
-if [ -f "ABRIR_PRIMERA_VEZ.command" ]; then
-    cp "ABRIR_PRIMERA_VEZ.command" "$DMG_TEMP/"
-    chmod +x "$DMG_TEMP/ABRIR_PRIMERA_VEZ.command"
-fi
-
 # Crear archivo de instrucciones
 cat > "$DMG_TEMP/INSTRUCCIONES.txt" << 'EOF'
 ═══════════════════════════════════════════════════════
@@ -40,17 +34,13 @@ cat > "$DMG_TEMP/INSTRUCCIONES.txt" << 'EOF'
 
 2. Para abrir la aplicación la primera vez:
    
-   OPCIÓN A (Recomendada):
-   → Haz doble clic en "ABRIR_PRIMERA_VEZ.command"
-   → El script abrirá la aplicación automáticamente
-   
-   OPCIÓN B (Manual):
-   → Haz clic derecho en GalletitaClicks.app en Applications
+   → Ve a la carpeta Applications
+   → Haz clic DERECHO (o Control+clic) en GalletitaClicks.app
    → Selecciona "Abrir"
-   → Confirma en el diálogo de seguridad
+   → Confirma en el diálogo de seguridad haciendo clic en "Abrir"
 
 3. ¡Listo! A partir de ahora podrás abrir la aplicación
-   normalmente con doble clic.
+   normalmente con DOBLE CLIC como cualquier otra app.
 
 ═══════════════════════════════════════════════════════
 Si tienes problemas, consulta el README en GitHub.
@@ -244,11 +234,8 @@ echo "Configurando vista del Finder..."
             -- Posicionar los iconos (más separados para la flecha entre ellos)
             set position of item "GalletitaClicks.app" of container window to {120, 100}
             set position of item "Applications" of container window to {420, 100}
-            if exists item "ABRIR_PRIMERA_VEZ.command" of container window then
-                set position of item "ABRIR_PRIMERA_VEZ.command" of container window to {120, 255}
-            end if
             if exists item "INSTRUCCIONES.txt" of container window then
-                set position of item "INSTRUCCIONES.txt" of container window to {420, 255}
+                set position of item "INSTRUCCIONES.txt" of container window to {120, 255}
             end if
             
             -- Actualizar y guardar la vista
