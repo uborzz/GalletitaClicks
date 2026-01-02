@@ -1237,14 +1237,13 @@ class AutoClicker:
         if platform.system() != "Darwin":  # Solo en macOS
             return
         
-        # Verificar permisos de forma estricta
-        has_permissions = self.verify_permissions_strict()
-        
-        if not has_permissions:
-            # No hay permisos, mostrar el diálogo
-            # NO marcar permissions_shown como True todavía - solo se marcará cuando realmente se otorguen
+        # Solo verificar si no se ha mostrado el diálogo antes
+        # Si ya se mostró, no verificar al iniciar (se verificará al pulsar Start)
+        if not self.permissions_shown:
+            # Primera vez, mostrar el diálogo sin verificar (más seguro)
             self.request_accessibility_permissions(update_config=False)
-        # Si hay permisos, no hacer nada (todo está bien)
+        # Si ya se mostró antes, no hacer nada al iniciar
+        # La verificación real se hará cuando el usuario pulse Start
     
     def verify_permissions_strict(self):
         """Verifica permisos de forma estricta intentando mover el mouse"""
