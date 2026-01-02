@@ -20,11 +20,16 @@ Auto-clicker para macOS con interfaz gráfica intuitiva.
 
 ## Permisos requeridos
 
-La primera vez que ejecutes la aplicación, macOS te pedirá permisos de accesibilidad:
+**Importante:** La aplicación debe ejecutarse desde el archivo `.app` empaquetado, no desde la terminal.
 
-1. Ve a **Preferencias del Sistema** > **Seguridad y Privacidad** > **Privacidad** > **Accesibilidad**
-2. Marca la casilla junto a **GalletitaClicks**
-3. Reinicia la aplicación
+Cuando ejecutes `GalletitaClicks.app` (no `python galletitaclicks.py`), macOS mostrará el icono de la aplicación en las Preferencias del Sistema y pedirá permisos específicamente para **GalletitaClicks**, no para iTerm o Python.
+
+1. Ejecuta la aplicación desde Applications o desde el DMG
+2. La primera vez, aparecerá un diálogo pidiendo permisos de accesibilidad
+3. Ve a **Preferencias del Sistema** > **Seguridad y Privacidad** > **Privacidad** > **Accesibilidad**
+4. Verás **GalletitaClicks** con su icono en la lista
+5. Marca la casilla junto a **GalletitaClicks**
+6. Reinicia la aplicación
 
 ## Uso
 
@@ -33,7 +38,7 @@ La primera vez que ejecutes la aplicación, macOS te pedirá permisos de accesib
 3. Opcionalmente activa:
    - **Intervalo aleatorio**: Los clicks ocurrirán en un tiempo aleatorio entre el mínimo y máximo
    - **Clicks en posición aleatoria**: Los clicks ocurrirán dentro de un círculo alrededor del cursor
-   - **Movimientos sexy**: El cursor se moverá suavemente entre clicks
+   - **Movimiento sexy**: El cursor se moverá suavemente entre clicks
 4. Haz clic en **Start** para comenzar
 5. Haz clic en **Stop** para detener
 
