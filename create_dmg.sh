@@ -22,7 +22,16 @@ rm -rf "$DMG_TEMP"
 mkdir -p "$DMG_TEMP"
 
 # Copiar la aplicación al directorio temporal
+echo "Copiando aplicación al directorio temporal..."
 cp -R "dist/GalletitaClicks.app" "$DMG_TEMP/"
+
+# Eliminar atributos de cuarentena y atributos extendidos de la aplicación
+echo "Limpiando atributos de cuarentena y permisos..."
+xattr -cr "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null || true
+# Asegurar permisos de ejecución en todos los binarios
+find "$DMG_TEMP/GalletitaClicks.app" -type f -perm +111 -exec chmod 755 {} \; 2>/dev/null || true
+# Asegurar permisos de ejecución en el ejecutable principal
+chmod 755 "$DMG_TEMP/GalletitaClicks.app/Contents/MacOS/GalletitaClicks" 2>/dev/null || true
 
 # Crear archivo de instrucciones
 cat > "$DMG_TEMP/INSTRUCCIONES.txt" << 'EOF'
@@ -49,6 +58,11 @@ cat > "$DMG_TEMP/INSTRUCCIONES.txt" << 'EOF'
 4. Cierra la aplicación si se abrió y vuelve a abrirla
    → Ahora funcionará normalmente con doble clic
 
+5. Si la aplicación aún no se abre después de los pasos anteriores:
+   → Abre Terminal y ejecuta:
+     xattr -cr /Applications/GalletitaClicks.app
+   → Luego intenta abrir la aplicación de nuevo
+
 NOTA: La aplicación no está firmada con certificado de Apple,
 por eso macOS requiere estos pasos adicionales. En algunas
 versiones de macOS, el botón "Abrir igualmente" solo aparece
@@ -66,12 +80,16 @@ xattr -c "$DMG_TEMP/INSTRUCCIONES.txt" 2>/dev/null || true
 
 # Firmar la aplicación antes de crear el DMG (ad-hoc signing mejorado)
 echo "Firmando la aplicación para el DMG..."
-# Firmar todos los binarios primero
-find "$DMG_TEMP/GalletitaClicks.app" -type f -perm +111 -exec codesign --force --sign - {} \; 2>/dev/null || true
-# Firmar el bundle completo
-codesign --force --deep --sign - --options runtime "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null || {
+# Eliminar firmas anteriores si existen
+codesign --remove-signature "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null || true
+# Firmar todos los binarios primero (en orden correcto)
+find "$DMG_TEMP/GalletitaClicks.app/Contents" -type f \( -name "*.so" -o -name "*.dylib" -o -perm +111 \) -exec codesign --force --sign - --timestamp=none {} \; 2>/dev/null || true
+# Firmar el bundle completo con opciones runtime
+codesign --force --deep --sign - --timestamp=none --options runtime "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null || {
     echo "Advertencia: No se pudo firmar la aplicación completamente. Continuando..."
 }
+# Verificar la firma
+codesign --verify --verbose=1 "$DMG_TEMP/GalletitaClicks.app" 2>/dev/null && echo "✓ Aplicación firmada correctamente" || echo "⚠ Firma no verificada (normal sin certificado de desarrollador)"
 
 # Crear un enlace simbólico a Applications
 ln -s /Applications "$DMG_TEMP/Applications"
@@ -300,6 +318,10 @@ sleep 2
 echo "Comprimiendo DMG..."
 rm -f "GalletitaClicks.dmg"
 hdiutil convert "$DMG_TEMP_FILE" -format UDZO -o "GalletitaClicks.dmg"
+
+# Eliminar atributos de cuarentena del DMG final (si se aplicaron)
+echo "Limpiando atributos de cuarentena del DMG final..."
+xattr -cr "GalletitaClicks.dmg" 2>/dev/null || true
 
 # El icono y el fondo ya se aplicaron antes de comprimir, así que deberían estar en el DMG final
 # No intentar aplicar el icono después de comprimir porque el DMG comprimido es solo lectura
