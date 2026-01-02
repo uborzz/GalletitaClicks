@@ -63,8 +63,8 @@ Cuando ejecutes `GalletitaClicks.app` (no `python galletitaclicks.py`), macOS mo
 
 ## Licencia
 
-[Especifica tu licencia aquí]
+-
 
 ## Autor
 
-[Tu nombre/información]
+uborZz
