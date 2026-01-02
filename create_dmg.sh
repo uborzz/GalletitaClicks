@@ -27,25 +27,42 @@ cp -R "dist/GalletitaClicks.app" "$DMG_TEMP/"
 # Crear archivo de instrucciones
 cat > "$DMG_TEMP/INSTRUCCIONES.txt" << 'EOF'
 ═══════════════════════════════════════════════════════
-  GALLETITACLICKS - INSTRUCCIONES DE INSTALACIÓN
+  GALLETITACLICKS - INSTRUCCIONES
 ═══════════════════════════════════════════════════════
 
-1. Arrastra "GalletitaClicks.app" a la carpeta Applications
+1. Arrastra "GalletitaClicks.app" a Applications
 
-2. Para abrir la aplicación la primera vez:
-   
-   → Ve a la carpeta Applications
-   → Haz clic DERECHO (o Control+clic) en GalletitaClicks.app
-   → Selecciona "Abrir"
-   → Confirma en el diálogo de seguridad haciendo clic en "Abrir"
+2. Intenta abrir GalletitaClicks desde Applications
+   → La primera vez verás un mensaje de que el software
+     es malicioso (esto es normal, la app no está firmada)
+   → Solo tendrás la opción de moverla a la papelera
+   → NO la muevas a la papelera, cierra el diálogo
 
-3. ¡Listo! A partir de ahora podrás abrir la aplicación
-   normalmente con DOBLE CLIC como cualquier otra app.
+3. Para permitir la ejecución (IMPORTANTE - después del paso 2):
+   → Ve a Preferencias del Sistema > Privacidad y Seguridad
+   → Baja hasta la sección "Seguridad" (abajo de la ventana)
+   → Tras intentar abrir la app por primera vez, verás:
+     "Se ha bloqueado GalletitaClicks para proteger tu Mac"
+   → Haz clic en el botón "Abrir igualmente"
+   → Ingresa tu contraseña de administrador si se solicita
+
+4. Cierra la aplicación si se abrió y vuelve a abrirla
+   → Ahora funcionará normalmente con doble clic
+
+NOTA: La aplicación no está firmada con certificado de Apple,
+por eso macOS requiere estos pasos adicionales. En algunas
+versiones de macOS, el botón "Abrir igualmente" solo aparece
+en Preferencias del Sistema > Privacidad y Seguridad > Seguridad
+después de intentar abrir la aplicación por primera vez.
 
 ═══════════════════════════════════════════════════════
-Si tienes problemas, consulta el README en GitHub.
+https://github.com/uborzz/GalletitaClicks
 ═══════════════════════════════════════════════════════
 EOF
+# Dar permisos de lectura a todos los usuarios y eliminar atributos extendidos
+chmod 644 "$DMG_TEMP/INSTRUCCIONES.txt"
+chown $(whoami):staff "$DMG_TEMP/INSTRUCCIONES.txt" 2>/dev/null || true
+xattr -c "$DMG_TEMP/INSTRUCCIONES.txt" 2>/dev/null || true
 
 # Firmar la aplicación antes de crear el DMG (ad-hoc signing mejorado)
 echo "Firmando la aplicación para el DMG..."

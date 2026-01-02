@@ -19,23 +19,19 @@ Auto-clicker para macOS con interfaz gráfica intuitiva.
 
 ### Si aparece un mensaje de seguridad al abrir:
 
-**Opción 1 (Más fácil):** 
 1. Arrastra `GalletitaClicks.app` a Applications
-2. En el DMG, ejecuta el script **"ABRIR_PRIMERA_VEZ.command"** (doble clic)
-3. El script eliminará la cuarentena y abrirá la aplicación automáticamente
+2. Intenta abrir GalletitaClicks desde Applications
+   → La primera vez verás un mensaje de que el software es malicioso
+   → Solo tendrás la opción de moverla a la papelera
+3. Ve a **Preferencias del Sistema** > **Privacidad y Seguridad**
+   → Baja hasta la sección **"Seguridad"** (abajo)
+   → Verás el mensaje: "Se ha bloqueado GalletitaClicks para proteger tu Mac"
+   → Haz clic en el botón **"Abrir igualmente"**
+   → Ingresa tu contraseña de administrador si se solicita
+4. Cierra la aplicación si se abrió y vuelve a abrirla
+   → Ahora funcionará normalmente con doble clic
 
-**Opción 2 (Manual):**
-1. Haz clic derecho (o Control+clic) en `GalletitaClicks.app` en Applications
-2. Selecciona **"Abrir"**
-3. macOS te preguntará si estás seguro, haz clic en **"Abrir"**
-
-**Opción 3 (Terminal):**
-```bash
-xattr -cr /Applications/GalletitaClicks.app
-open /Applications/GalletitaClicks.app
-```
-
-**Después de cualquiera de estas opciones:** Ya podrás abrir la aplicación normalmente con **doble clic** como cualquier otra app. macOS la recordará como segura.
+**NOTA:** La aplicación no está firmada con certificado de Apple, por eso macOS requiere estos pasos adicionales.
 
 ## Permisos requeridos
 

@@ -1115,9 +1115,34 @@ class AutoClicker:
                     else:
                         time.sleep(interval)
                 except Exception as e:
-                    print(f"Error al hacer click: {e}")
-                    import traceback
-                    traceback.print_exc()
+                    # Si hay un error de permisos, resetear el flag y mostrar el diálogo
+                    error_str = str(e).lower()
+                    if 'permission' in error_str or 'accessibility' in error_str or 'trusted' in error_str:
+                        # Resetear el flag para que se muestre el diálogo de nuevo
+                        self.permissions_shown = False
+                        self.save_config()  # Guardar el cambio inmediatamente
+                        # Detener el clicking
+                        self.is_running = False
+                        # Actualizar el estado del botón y la etiqueta en el hilo principal
+                        def reset_ui():
+                            self.toggle_button.config(
+                                text="Start",
+                                style="Start.TButton",
+                                command=self.start_clicking
+                            )
+                            self.status_label.config(
+                                text="Estado: Detenido", 
+                                foreground="red",
+                                font=("Arial", 16, "normal")
+                            )
+                            # Mostrar el diálogo de permisos
+                            self.request_accessibility_permissions()
+                        self.root.after(0, reset_ui)
+                        break
+                    else:
+                        print(f"Error al hacer click: {e}")
+                        import traceback
+                        traceback.print_exc()
                     time.sleep(check_interval)
             else:
                 # Mouse aún no está quieto el tiempo suficiente
@@ -1133,6 +1158,35 @@ class AutoClicker:
     def start_clicking(self):
         """Inicia el proceso de clicking"""
         if self.is_running:
+            return
+        
+        # Verificar permisos antes de iniciar (solo cuando se pulsa Start)
+        has_permissions = self.verify_permissions_strict()
+        if not has_permissions:
+            # Si no hay permisos, resetear el flag para que se muestre el diálogo de nuevo
+            # Esto es útil cuando se instala una nueva versión que podría usar config vieja
+            self.permissions_shown = False
+            self.save_config()  # Guardar el cambio inmediatamente
+            
+            # Mostrar alerta indicando que la aplicación se cerrará
+            message = (
+                "GalletitaClicks necesita permisos de accesibilidad para funcionar.\n\n"
+                "La aplicación se cerrará ahora. Por favor:\n"
+                "1. Vuelve a abrir GalletitaClicks\n"
+                "2. Se te pedirá otorgar permisos de accesibilidad\n"
+                "3. Ve a Preferencias del Sistema > Privacidad y Seguridad > Privacidad > Accesibilidad\n"
+                "4. Marca la casilla junto a GalletitaClicks\n"
+                "5. Reinicia la aplicación si es necesario"
+            )
+            
+            messagebox.showinfo(
+                "Permisos de Accesibilidad Requeridos",
+                message
+            )
+            
+            # Cerrar la aplicación
+            self.root.quit()
+            self.root.destroy()
             return
         
         self.is_running = True
@@ -1183,47 +1237,69 @@ class AutoClicker:
         if platform.system() != "Darwin":  # Solo en macOS
             return
         
-        # Verificar si ya se mostró el diálogo anteriormente (usando el JSON)
-        if self.permissions_shown:
-            # Ya se mostró antes, verificar permisos de forma más estricta
-            has_permissions = self.verify_permissions_strict()
-            if not has_permissions:
-                # Si no hay permisos, mostrar el diálogo de nuevo
-                self.request_accessibility_permissions()
-        else:
-            # Primera vez, siempre mostrar el diálogo
-            self.request_accessibility_permissions()
+        # Verificar permisos de forma estricta
+        has_permissions = self.verify_permissions_strict()
+        
+        if not has_permissions:
+            # No hay permisos, mostrar el diálogo
+            # NO marcar permissions_shown como True todavía - solo se marcará cuando realmente se otorguen
+            self.request_accessibility_permissions(update_config=False)
+        # Si hay permisos, no hacer nada (todo está bien)
     
     def verify_permissions_strict(self):
-        """Verifica permisos de forma estricta intentando hacer un click"""
+        """Verifica permisos de forma estricta intentando mover el mouse"""
         try:
-            # Intentar hacer un click de prueba (esto requiere permisos)
-            # Pero no queremos hacer un click real, así que intentamos mover el mouse
-            # a una posición muy cercana (1 píxel) y verificar que funciona
+            # Obtener la posición actual del mouse
             original_pos = self.mouse_controller.position
-            test_pos = (original_pos[0] + 1, original_pos[1])
+            
+            # Intentar mover el mouse a una posición muy cercana (5 píxeles)
+            # Si no hay permisos, esto fallará o no moverá el mouse
+            test_pos = (original_pos[0] + 5, original_pos[1] + 5)
             
             try:
-                # Intentar mover el mouse 1 píxel
+                # Intentar mover el mouse
                 self.mouse_controller.position = test_pos
-                time.sleep(0.02)
+                time.sleep(0.15)  # Dar más tiempo para que el movimiento se registre
+                
+                # Verificar la nueva posición
                 new_pos = self.mouse_controller.position
+                
+                # Calcular la distancia entre la posición original y la nueva
+                distance_from_original = math.sqrt((new_pos[0] - original_pos[0])**2 + (new_pos[1] - original_pos[1])**2)
+                
+                # Calcular la distancia entre la posición objetivo y la posición real
+                distance_to_target = math.sqrt((new_pos[0] - test_pos[0])**2 + (new_pos[1] - test_pos[1])**2)
+                
                 # Volver a la posición original
                 self.mouse_controller.position = original_pos
-                time.sleep(0.01)
+                time.sleep(0.05)
                 
-                # Verificar que el movimiento funcionó (dentro de 2 píxeles)
-                distance = math.sqrt((new_pos[0] - test_pos[0])**2 + (new_pos[1] - test_pos[1])**2)
-                if distance < 2:
+                # Si el mouse no se movió desde la posición original (distancia < 2 píxeles), no hay permisos
+                if distance_from_original < 2:
+                    return False
+                
+                # Si la distancia al objetivo es pequeña (menos de 4 píxeles), el movimiento funcionó
+                if distance_to_target < 4:
                     return True
                 else:
-                    return False
+                    # El mouse se movió pero no al objetivo, podría ser movimiento del usuario
+                    # En este caso, asumimos que hay permisos porque el mouse se movió
+                    return True
             except Exception as e:
+                # Si hay una excepción, probablemente no hay permisos
+                error_str = str(e).lower()
+                if 'permission' in error_str or 'accessibility' in error_str or 'trusted' in error_str:
+                    return False
+                # Cualquier otra excepción también indica falta de permisos
                 return False
         except Exception as e:
+            # Si no podemos ni obtener la posición, definitivamente no hay permisos
+            error_str = str(e).lower()
+            if 'permission' in error_str or 'accessibility' in error_str or 'trusted' in error_str:
+                return False
             return False
     
-    def request_accessibility_permissions(self):
+    def request_accessibility_permissions(self, update_config=True):
         """Muestra un diálogo solicitando permisos de accesibilidad"""
         # Asegurar que la ventana principal esté en primer plano y visible
         self.root.lift()
@@ -1245,9 +1321,12 @@ class AutoClicker:
             icon="warning"
         )
         
-        # Marcar que ya se mostró el diálogo (se guardará en el JSON)
-        self.permissions_shown = True
-        self.save_config()  # Guardar inmediatamente
+        # Solo marcar permissions_shown si update_config es True
+        # Esto permite que al iniciar, si no hay permisos, se muestre el diálogo
+        # pero no se marque como "ya mostrado" hasta que realmente se otorguen
+        if update_config:
+            self.permissions_shown = True
+            self.save_config()  # Guardar inmediatamente
         
         if result:
             # Abrir Preferencias del Sistema en la sección de Accesibilidad
